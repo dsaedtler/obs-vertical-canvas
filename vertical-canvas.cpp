@@ -1637,6 +1637,7 @@ CanvasDock::~CanvasDock()
 			obs_output_stop(it->output);
 		obs_output_release(it->output);
 		obs_data_release(it->settings);
+		obs_service_release(it->service);
 	}
 	streamOutputs.clear();
 
@@ -8117,6 +8118,7 @@ bool CanvasDock::LoadStreamOutputs(obs_data_array_t *outputs)
 				obs_output_stop(it->output);
 			obs_output_release(it->output);
 			obs_data_release(it->settings);
+			obs_service_release(it->service);
 			it = streamOutputs.erase(it);
 		} else {
 			it++;
