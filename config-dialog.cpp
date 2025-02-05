@@ -1128,7 +1128,6 @@ void OBSBasicSettings::LoadSettings()
 	}
 
 	resolution->setEnabled(enable);
-	showScenes->setChecked(!canvasDock->hideScenes);
 	virtualCameraMode->setCurrentIndex(canvasDock->virtual_cam_mode);
 	recordVideoBitrate->setValue(canvasDock->recordVideoBitrate ? canvasDock->recordVideoBitrate : 6000);
 	maxTimeEnable->setChecked(canvasDock->max_time_sec > 0);
@@ -1214,16 +1213,6 @@ void OBSBasicSettings::SaveSettings()
 		hw->Save();
 	}
 
-	if (canvasDock->hideScenes == showScenes->isChecked()) {
-		canvasDock->hideScenes = !showScenes->isChecked();
-		auto sl = canvasDock->GetGlobalScenesList();
-		for (int j = 0; j < sl->count(); j++) {
-			auto item = sl->item(j);
-			if (canvasDock->HasScene(item->text())) {
-				item->setHidden(canvasDock->hideScenes);
-			}
-		}
-	}
 	const auto res = resolution->currentText();
 	uint32_t width, height;
 	if (sscanf(res.toUtf8().constData(), "%dx%d", &width, &height) == 2 && width > 0 && height > 0 &&
@@ -1237,7 +1226,7 @@ void OBSBasicSettings::SaveSettings()
 		canvasDock->canvas_width = width;
 		canvasDock->canvas_height = height;
 
-		canvasDock->ResizeScenes();
+		canvasDock->ResetVerticalVideo();
 		auto t = obs_weak_source_get_source(canvasDock->source);
 		if (obs_source_get_type(t) == OBS_SOURCE_TYPE_TRANSITION) {
 			obs_transition_set_size(t, width, height);

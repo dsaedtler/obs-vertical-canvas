@@ -208,22 +208,7 @@ void CanvasScenesDock::ShowScenesContextMenu(QListWidgetItem *widget_item)
 		}
 		obs_frontend_source_list_free(&scenes);
 	});
-	if (canvasDock->hideScenes) {
-		menu.addAction(QString::fromUtf8(obs_module_text("OnMainCanvas")), [this] {
-			auto item = sceneList->currentItem();
-			if (!item)
-				return;
-			auto s = obs_get_source_by_name(item->text().toUtf8().constData());
-			if (!s)
-				return;
 
-			if (obs_frontend_preview_program_mode_active())
-				obs_frontend_set_current_preview_scene(s);
-			else
-				obs_frontend_set_current_scene(s);
-			obs_source_release(s);
-		});
-	}
 	a = menu.addAction(QString::fromUtf8(obs_frontend_get_locale_string("ShowInMultiview")), [scene_name](bool checked) {
 		OBSSourceAutoRelease source = obs_get_source_by_name(scene_name.c_str());
 		OBSDataAutoRelease ps = obs_source_get_private_settings(source);
@@ -365,40 +350,12 @@ void CanvasScenesDock::ChangeSceneIndex(bool relative, int offset, int invalidId
 	auto canvasItem = sceneList->item(idx);
 	if (!canvasItem)
 		return;
-	auto sl = canvasDock->GetGlobalScenesList();
-	int row = -1;
-	bool hidden = false;
-	bool selected = false;
-	for (int i = 0; i < sl->count(); i++) {
-		auto item = sl->item(i);
-		if (item->text() == canvasItem->text()) {
-			row = i;
-			hidden = item->isHidden();
-			selected = item->isSelected();
-			break;
-		}
-	}
-	if (row < 0 || row >= sl->count())
-		return;
-
-	sl->blockSignals(true);
-	QListWidgetItem *item = sl->takeItem(row);
-	if (relative) {
-		sl->insertItem(row + offset, item);
-	} else if (offset == 0) {
-		sl->insertItem(offset, item);
-	} else {
-		sl->insertItem(sl->count(), item);
-	}
-	item->setHidden(hidden);
-	item->setSelected(selected);
-	sl->blockSignals(false);
 
 	if (idx == invalidIdx)
 		return;
 
 	sceneList->blockSignals(true);
-	item = sceneList->takeItem(idx);
+	auto item = sceneList->takeItem(idx);
 	if (relative) {
 		sceneList->insertItem(idx + offset, item);
 		sceneList->setCurrentRow(idx + offset);

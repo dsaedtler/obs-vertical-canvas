@@ -34,6 +34,8 @@
 #define VIRTUAL_CAMERA_MAIN 1
 #define VIRTUAL_CAMERA_BOTH 2
 
+static constexpr std::string_view AITUM_CANVAS_NAME = "Aitum-Vertical";
+
 enum class ItemHandle : uint32_t {
 	None = 0,
 	TopLeft = ITEM_TOP | ITEM_LEFT,
@@ -98,11 +100,12 @@ private:
 	QFrame *previewDisabledWidget;
 	QPushButton *configButton;
 	OBSWeakSource source;
-	obs_source_t *transitionAudioWrapper;
 	std::vector<OBSSource> transitions;
 	std::vector<OBSProjector *> projectors;
 	std::unique_ptr<OBSEventFilter> eventFilter;
 	time_t partnerBlockTime = 0;
+
+	OBSCanvasAutoRelease canvas;
 
 	std::vector<obs_sceneitem_t *> hoveredPreviewItems;
 	std::vector<obs_sceneitem_t *> selectedItems;
@@ -142,7 +145,6 @@ private:
 	matrix4 itemToScreen{};
 	matrix4 invGroupTransform{};
 	obs_scene_t *scene = nullptr;
-	obs_view_t *view = nullptr;
 	video_t *video = nullptr;
 	obs_view_t *multiCanvasView = nullptr;
 	video_t *multiCanvasVideo = nullptr;
@@ -194,7 +196,6 @@ private:
 	uint32_t canvas_width;
 	uint32_t canvas_height;
 	bool restart_video = false;
-	bool hideScenes;
 	uint32_t streamingVideoBitrate;
 	uint32_t recordVideoBitrate;
 	uint32_t audioBitrate;
@@ -312,7 +313,7 @@ private:
 
 	void AddSourceToScene(obs_source_t *source);
 
-	bool StartVideo();
+	bool ResetVerticalVideo();
 	void HandleRecordError(int code, QString last_error);
 
 	void CreateScenesRow();
@@ -322,7 +323,6 @@ private:
 	bool HasScene(QString scene) const;
 	void CheckReplayBuffer(bool start = false);
 	void SendVendorEvent(const char *e);
-	QListWidget *GetGlobalScenesList();
 	void ResizeScenes();
 	void ResizeScene(QString scene_name);
 	void DeleteProjector(OBSProjector *projector);
@@ -356,7 +356,6 @@ private:
 	static void stream_output_stop(void *p, calldata_t *calldata);
 	static void source_rename(void *p, calldata_t *calldata);
 	static void source_remove(void *p, calldata_t *calldata);
-	static void source_save(void *p, calldata_t *calldata);
 	static bool start_virtual_cam_hotkey(void *data, obs_hotkey_pair_id id, obs_hotkey_t *hotkey, bool pressed);
 	static bool stop_virtual_cam_hotkey(void *data, obs_hotkey_pair_id id, obs_hotkey_t *hotkey, bool pressed);
 	static bool start_recording_hotkey(void *data, obs_hotkey_pair_id id, obs_hotkey_t *hotkey, bool pressed);
@@ -442,8 +441,6 @@ public:
 	CanvasScenesDock *GetScenesDock();
 	inline uint32_t GetCanvasWidth() const { return canvas_width; }
 	inline uint32_t GetCanvasHeight() const { return canvas_height; }
-	inline video_t *GetVideo() const { return video; }
-	inline obs_view_t *GetView() const { return view; }
 	bool LoadStreamOutputs(obs_data_array_t *outputs);
 	obs_data_array_t *SaveStreamOutputs();
 	void StartStreamOutput(std::string name);
